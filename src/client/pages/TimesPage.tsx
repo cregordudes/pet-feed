@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { api, ApiError } from '../api';
 import { useApp } from '../app-context';
 
-const FIVE = '09:00, 13:00, 16:00, 19:00, 23:00';
-const THREE = '08:00, 14:00, 20:00';
+const FIVE = 'Starts at 09:00, 13:00, 16:00, 19:00, 23:00';
+const THREE = 'Starts at 08:00, 14:00, 20:00';
 
 export function TimesPage() {
   const { refresh } = useApp();
   const [times, setTimes] = useState<string[] | null>(null);
   const [mealCount, setMealCount] = useState<3 | 5>(5);
-  const [choice, setChoice] = useState<3 | 5>(5);
+  const [choice, setChoice] = useState<3 | 5 | null>(null);
   const [effectiveDate, setEffectiveDate] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -23,7 +23,7 @@ export function TimesPage() {
         if (cancelled) return;
         setTimes(next.times);
         setMealCount(next.mealCount);
-        setChoice(next.mealCount);
+        setChoice(null);
         setEffectiveDate(next.today);
       })
       .catch((err: unknown) => {
@@ -53,6 +53,7 @@ export function TimesPage() {
   }
 
   async function saveCount() {
+    if (choice == null) return;
     setBusy(true);
     setError('');
     setMessage('');
@@ -61,7 +62,7 @@ export function TimesPage() {
       const next = await api.schedule();
       setTimes(next.times);
       setMealCount(next.mealCount);
-      setChoice(next.mealCount);
+      setChoice(null);
       setMessage('Saved from that date on. Earlier days stay as they were.');
       refresh();
     } catch (err) {
@@ -121,7 +122,7 @@ export function TimesPage() {
         <input type="date" value={effectiveDate} onChange={(event) => setEffectiveDate(event.target.value)} />
       </label>
       <div className="stack">
-        <button type="button" className="solid" data-testid="count-from-now-on" disabled={busy || choice === mealCount} onClick={() => void saveCount()}>
+        <button type="button" className="solid" data-testid="count-from-now-on" disabled={busy || choice == null || choice === mealCount} onClick={() => void saveCount()}>
           From now on
         </button>
       </div>
